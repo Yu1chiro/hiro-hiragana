@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hiragana Garden 🌸 Belajar Hiragana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: {
+      ui: ['Fredoka', 'system-ui', 'sans-serif'],
+      jp: ['"Zen Maru Gothic"', '"Hiragino Maru Gothic ProN"', '"Yu Gothic"', 'sans-serif']
+    },
+    keyframes: {
+      pop: { '0%': { transform: 'scale(.7)', opacity: 0 }, '70%': { transform: 'scale(1.05)' }, '100%': { transform: 'scale(1)', opacity: 1 } },
+      shake: { '0%,100%': { transform: 'translateX(0)' }, '20%,60%': { transform: 'translateX(-8px)' }, '40%,80%': { transform: 'translateX(8px)' } },
+      bounce2: { '0%,100%': { transform: 'scale(1) rotate(0)' }, '40%': { transform: 'scale(1.1) rotate(-4deg)' }, '70%': { transform: 'scale(.97) rotate(3deg)' } },
+      fadein: { from: { opacity: 0, transform: 'translateY(8px)' }, to: { opacity: 1, transform: 'none' } },
+      fall: { from: { transform: 'translateY(0) rotate(0)', opacity: 1 }, to: { transform: 'translateY(112vh) rotate(540deg)', opacity: 0.9 } },
+      petal: { from: { transform: 'translate(0,-10vh) rotate(0)' }, to: { transform: 'translate(70px,112vh) rotate(360deg)' } }
+    },
+    animation: {
+      pop: 'pop .35s ease-out both',
+      shake: 'shake .4s ease-in-out',
+      bounce2: 'bounce2 .6s ease-in-out',
+      fadein: 'fadein .35s ease-out both',
+      fall: 'fall 3s ease-in forwards',
+      petal: 'petal 16s linear infinite'
+    }
+  } }
+}
+</script>
+</head>
+<body class="min-h-screen select-none touch-manipulation bg-gradient-to-br from-rose-100 via-fuchsia-50 to-sky-100 bg-fixed font-ui text-slate-600 antialiased">
+  <div class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-amber-200/50 blur-3xl"></div>
+    <div class="absolute -right-24 top-1/3 h-80 w-80 rounded-full bg-sky-200/60 blur-3xl"></div>
+    <div class="absolute -bottom-24 left-1/4 h-72 w-72 rounded-full bg-emerald-200/50 blur-3xl"></div>
+    <div id="petals"></div>
+  </div>
+  <main id="app" class="relative mx-auto max-w-5xl px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))]"></main>
+
+<script>
+/* ========== DATA ========== */
+const parse = s => s.trim().split(/\s+/).map(t => { const m = t.match(/^([^\x00-\x7F]+)(.+)$/); return { h: m[1], r: m[2] } });
+const GOJUON = parse(`あa いi うu えe おo かka きki くku けke こko さsa しshi すsu せse そso たta ちchi つtsu てte とto なna にni ぬnu ねne のno はha ひhi ふfu へhe ほho まma みmi むmu めme もmo やya ゆyu よyo らra りri るru れre ろro わwa をwo んn`);
+const DAKUON = parse(`がga ぎgi ぐgu げge ごgo ざza じji ずzu ぜze ぞzo だda ぢji(di) づzu(du) でde どdo ばba びbi ぶbu べbe ぼbo`);
+const HANDAKUON = parse(`ぱpa ぴpi ぷpu ぺpe ぽpo`);
+const YOON = parse(`きゃkya きゅkyu きょkyo しゃsha しゅshu しょsho ちゃcha ちゅchu ちょcho にゃnya にゅnyu にょnyo ひゃhya ひゅhyu ひょhyo みゃmya みゅmyu みょmyo りゃrya りゅryu りょryo ぎゃgya ぎゅgyu ぎょgyo じゃja じゅju じょjo びゃbya びゅbyu びょbyo ぴゃpya ぴゅpyu ぴょpyo`);
+const C = {
+  vokal:     { name: 'Vokal AIUEO',    emoji: '🍙', g: 'from-rose-200 to-orange-200',   sample: 'あいうえお', chars: GOJUON.slice(0, 5) },
+  dasar:     { name: 'Hiragana Dasar', emoji: '🌸', g: 'from-pink-200 to-fuchsia-200',  sample: 'かさたなは', chars: GOJUON },
+  dakuon:    { name: 'Dakuon (゛)',    emoji: '🫧', g: 'from-sky-200 to-indigo-200',    sample: 'がざだば',   chars: DAKUON },
+  handakuon: { name: 'Handakuon (゜)', emoji: '🎈', g: 'from-emerald-200 to-teal-200',  sample: 'ぱぴぷぺぽ', chars: HANDAKUON },
+  yoon:      { name: 'Yoon (ゃゅょ)',  emoji: '🍓', g: 'from-amber-200 to-yellow-200',  sample: 'きゃしゅちょ', chars: YOON },
+  mix:       { name: 'Semua Campur',   emoji: '🌈', g: 'from-violet-200 to-pink-200',   sample: 'ひらがな',   chars: [...GOJUON, ...DAKUON, ...HANDAKUON, ...YOON] }
+};
+const TITLES = ['Murid Baru', 'Pemula Ceria', 'Pemburu Kana', 'Ahli Sakura', 'Sensei Kana', 'Legenda Kana'];
+const MASCOTS = ['🐣', '🐱', '🐰', '🦊', '🐼', '🦄'];
+
+/* ========== STATE (localStorage) ========== */
+const K = 'hiragana-garden-v1';
+const D = () => ({ xp: 0, sound: true, mode: 'mix', cats: {}, chars: {}, ta: 0, tc: 0, sd: 0, last: '' });
+let S; try { S = { ...D(), ...JSON.parse(localStorage.getItem(K) || '{}') } } catch (e) { S = D() }
+const save = () => { try { localStorage.setItem(K, JSON.stringify(S)) } catch (e) {} };
+const lvl = () => Math.floor(S.xp / 100) + 1;
+const tier = () => Math.min(Math.floor((lvl() - 1) / 2), 5);
+const mastered = c => ((S.chars[c.h] || {}).s || 0) >= 3;
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]] } return a };
+const $ = s => document.querySelector(s);
+const app = $('#app');
+let G = null, timer = null;
+
+/* ========== SOUND & FX ========== */
+let ac;
+const beep = (f, d = .12, t = 'sine', v = .14, w = 0) => { if (!S.sound) return; try { ac = ac || new AudioContext(); const o = ac.createOscillator(), g = ac.createGain(), n = ac.currentTime + w; o.type = t; o.frequency.value = f; o.connect(g); g.connect(ac.destination); g.gain.setValueAtTime(v, n); g.gain.exponentialRampToValueAtTime(.001, n + d); o.start(n); o.stop(n + d) } catch (e) {} };
+const sfx = { tap: () => beep(520, .05), ok: () => { beep(660, .1); beep(880, .16, 'sine', .14, .09) }, no: () => beep(210, .28, 'triangle', .18), win: () => [523, 659, 784, 1047].forEach((f, i) => beep(f, .22, 'sine', .14, i * .12)) };
+const say = t => { try { if (!S.sound) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'ja-JP'; u.rate = .8; speechSynthesis.speak(u) } catch (e) {} };
+function confetti(n = 40) {
+  const e = ['🌸', '⭐', '✨', '💖', '🍡', '🎀', '🌈'];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span');
+    s.textContent = e[Math.random() * e.length | 0];
+    s.className = 'pointer-events-none fixed -top-10 z-[100] animate-fall';
+    s.style.cssText = `left:${Math.random() * 100}vw;font-size:${16 + Math.random() * 20}px;animation-duration:${2 + Math.random() * 2}s;animation-delay:${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5200);
+  }
+}
+(function petals() {
+  let h = ''; for (let i = 0; i < 10; i++) h += `<span class="absolute -top-10 animate-petal opacity-60" style="left:${Math.random() * 100}%;font-size:${14 + Math.random() * 14}px;animation-duration:${14 + Math.random() * 14}s;animation-delay:-${Math.random() * 20}s">🌸</span>`;
+  $('#petals').innerHTML = h;
+})();
+
+/* ========== MODAL (popup Tailwind) ========== */
+const BTN = {
+  p: 'rounded-full bg-gradient-to-b from-pink-300 to-rose-300 px-6 py-3 font-bold text-white shadow-[0_5px_0_#f4a3b8] transition hover:brightness-105 active:translate-y-1 active:shadow-none',
+  s: 'rounded-full border-2 border-pink-200 bg-white px-6 py-3 font-bold text-rose-400 shadow-[0_5px_0_#fbcfe8] transition active:translate-y-1 active:shadow-none'
+};
+function modal({ emoji = '', title = '', body = '', btns = [], wide = false }) {
+  const w = document.createElement('div');
+  w.dataset.modal = 1;
+  w.className = 'fixed inset-0 z-50 flex animate-fadein items-center justify-center bg-rose-900/20 p-4 backdrop-blur-sm';
+  w.innerHTML = `<div class="max-h-[88vh] w-full ${wide ? 'max-w-lg' : 'max-w-sm'} animate-pop overflow-y-auto rounded-[2rem] border-4 border-white bg-gradient-to-b from-white to-pink-50 p-6 text-center shadow-2xl">
+    <div class="text-6xl">${emoji}</div><h2 class="mt-2 text-2xl font-bold text-rose-400">${title}</h2>
+    <div class="mt-2 text-slate-500">${body}</div>
+    <div class="mt-5 flex flex-col-reverse justify-center gap-3 sm:flex-row">${btns.map((b, i) => `<button data-i="${i}" class="${BTN[b.t || 'p']}">${b.l}</button>`).join('')}</div></div>`;
+  w.onclick = e => { if (e.target === w) w.remove() };
+  w.querySelectorAll('button').forEach(b => b.onclick = () => { w.remove(); sfx.tap(); const f = btns[b.dataset.i].f; f && f() });
+  document.body.appendChild(w);
+}
+
+/* ========== HOME ========== */
+const ib = (f, t) => `<button onclick="${f}" class="grid h-11 w-11 place-items-center rounded-full border-2 border-white bg-white/80 text-xl shadow-[0_4px_0_#fbcfe8] transition active:translate-y-1 active:shadow-none">${t}</button>`;
+const chip = (t, l) => `<div class="rounded-2xl bg-white/80 px-2 py-2"><div class="text-lg font-bold text-rose-400">${t}</div><div class="text-xs text-slate-400">${l}</div></div>`;
+function home() {
+  if (G) G.live = false;
+  const lv = lvl(), pct = S.xp % 100, acc = S.ta ? Math.round(S.tc / S.ta * 100) : 0;
+  const stars = Object.values(S.cats).reduce((a, c) => a + c.best, 0);
+  const modes = [['hr', 'あ → a'], ['rh', 'a → あ'], ['mix', '🎲 Acak']];
+  app.innerHTML = `<div class="animate-fadein">
+  <header class="flex items-start justify-between gap-3 pt-2">
+    <div><h1 class="text-3xl font-bold leading-tight text-rose-400 sm:text-4xl">Hiragana Garden <span class="inline-block animate-bounce2">🌸</span></h1>
+    <p class="font-jp font-bold text-pink-300">ひらがなガーデン</p></div>
+    <div class="flex gap-2">${ib('toggleSound()', S.sound ? '🔊' : '🔇')}${ib('chart()', '📖')}${ib('resetAll()', '🗑️')}</div>
+  </header>
+  <section class="mt-5 rounded-[2rem] border-4 border-white bg-white/60 p-4 shadow-lg backdrop-blur sm:p-5">
+    <div class="flex items-center gap-4">
+      <div class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-100 to-pink-200 text-4xl">${MASCOTS[tier()]}</div>
+      <div class="flex-1"><div class="flex justify-between gap-2 font-bold"><span class="text-rose-400">Lv.${lv} ${TITLES[tier()]}</span><span class="text-sm text-slate-400">${pct}/100 XP</span></div>
+      <div class="mt-2 h-4 overflow-hidden rounded-full bg-pink-100"><div class="h-full rounded-full bg-gradient-to-r from-pink-300 to-amber-200 transition-all duration-700" style="width:${pct}%"></div></div></div>
+    </div>
+    <div class="mt-4 grid grid-cols-3 gap-2 text-center">${chip('🔥 ' + S.sd, 'hari beruntun')}${chip('⭐ ' + stars + '/' + Object.keys(C).length * 3, 'bintang')}${chip('🎯 ' + acc + '%', 'akurasi')}</div>
+  </section>
+  <section class="mt-5">
+    <p class="mb-2 font-semibold text-slate-500">Mode soal</p>
+    <div class="grid grid-cols-3 gap-2 rounded-full border-2 border-white bg-white/50 p-1.5">${modes.map(([m, l]) => `<button onclick="setMode('${m}')" class="rounded-full py-2 font-jp font-bold transition ${S.mode === m ? 'bg-gradient-to-b from-pink-300 to-rose-300 text-white shadow' : 'text-slate-400 hover:bg-white/70'}">${l}</button>`).join('')}</div>
+  </section>
+  <section class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  ${Object.entries(C).map(([id, c]) => {
+    const m = c.chars.filter(mastered).length, p = Math.round(m / c.chars.length * 100), b = (S.cats[id] || {}).best || 0;
+    return `<button onclick="start('${id}')" class="group rounded-[2rem] border-4 border-white bg-gradient-to-br ${c.g} p-5 text-left shadow-[0_8px_0_rgba(255,255,255,.7)] transition hover:-translate-y-1 active:translate-y-1 active:shadow-none">
+      <div class="flex items-start justify-between"><span class="text-4xl transition group-hover:animate-bounce2">${c.emoji}</span><span class="text-lg tracking-wider">${'⭐'.repeat(b)}${'<span class="opacity-40">☆</span>'.repeat(3 - b)}</span></div>
+      <div class="mt-2 text-xl font-bold text-slate-700">${c.name}</div>
+      <div class="truncate font-jp text-3xl font-black text-white drop-shadow-sm">${c.sample}</div>
+      <div class="mt-3 flex items-center gap-2"><div class="h-3 flex-1 overflow-hidden rounded-full bg-white/60"><div class="h-full rounded-full bg-white transition-all duration-700" style="width:${p}%"></div></div><span class="text-sm font-semibold text-slate-600">${m}/${c.chars.length}</span></div>
+    </button>`;
+  }).join('')}
+  </section>
+  <p class="mt-6 text-center text-sm text-slate-400">Tekan tombol 1–4 di keyboard untuk menjawab. Progres tersimpan otomatis di browser 💾</p>
+  </div>`;
+}
+const setMode = m => { S.mode = m; save(); sfx.tap(); home() };
+const toggleSound = () => { S.sound = !S.sound; save(); S.sound && sfx.tap(); home() };
+function resetAll() {
+  modal({ emoji: '🥺', title: 'Hapus semua progres?', body: 'XP, bintang, dan hafalan huruf akan kembali ke nol.', btns: [{ l: 'Batal', t: 's' }, { l: 'Ya, hapus', f: () => { try { localStorage.removeItem(K) } catch (e) {} S = D(); home() } }] });
+}
+function chart() {
+  const sec = [['Dasar', GOJUON], ['Dakuon', DAKUON], ['Handakuon', HANDAKUON], ['Yoon', YOON]];
+  const cell = c => { const t = S.chars[c.h]; const k = !t ? 'bg-white text-slate-400' : mastered(c) ? 'bg-emerald-100 text-emerald-600' : t.w > t.c ? 'bg-rose-100 text-rose-500' : 'bg-amber-100 text-amber-600'; return `<div class="rounded-2xl py-1.5 ${k}"><div class="font-jp text-2xl font-bold">${c.h}</div><div class="text-[11px]">${c.r}</div></div>` };
+  modal({ emoji: '📖', title: 'Koleksi Hiragana', wide: true, btns: [{ l: 'Tutup' }],
+    body: `<div class="mb-3 flex flex-wrap justify-center gap-2 text-xs"><span class="rounded-full bg-white px-3 py-1">Belum dicoba</span><span class="rounded-full bg-amber-100 px-3 py-1">Belajar</span><span class="rounded-full bg-rose-100 px-3 py-1">Perlu latihan</span><span class="rounded-full bg-emerald-100 px-3 py-1">Hafal</span></div>` +
+      sec.map(([n, a]) => `<p class="mb-2 mt-4 font-bold text-rose-300">${n}</p><div class="grid grid-cols-5 gap-1.5 sm:grid-cols-6">${a.map(cell).join('')}</div>`).join('') });
+}
+
+/* ========== GAME ========== */
+const wt = c => { const t = S.chars[c.h] || {}; return Math.max(.4, 1 + (t.w || 0) * 1.5 - (t.s || 0) * .4) };
+function buildQs(pool) {
+  const out = []; let used = new Set;
+  for (let n = 0; n < 10; n++) {
+    const prev = (out[n - 1] || {}).h;
+    let c = pool.filter(x => !used.has(x.h) && x.h !== prev);
+    if (!c.length) { used = new Set; c = pool.filter(x => x.h !== prev) }
+    const ws = c.map(wt); let r = Math.random() * ws.reduce((a, b) => a + b), k = 0;
+    while ((r -= ws[k]) > 0 && k < c.length - 1) k++;
+    const ch = c[k]; used.add(ch.h);
+    const dir = S.mode === 'mix' ? (Math.random() < .5 ? 'hr' : 'rh') : S.mode;
+    out.push({ ...ch, dir, opts: shuffle([ch, ...shuffle(pool.filter(x => x.h !== ch.h)).slice(0, 3)]) });
+  }
+  return out;
+}
+function start(id) {
+  sfx.tap(); clearTimeout(timer);
+  G = { id, qs: buildQs(C[id].chars), i: 0, score: 0, combo: 0, best: 0, xp: 0, locked: false, live: true };
+  game();
+}
+const OPT = 'relative rounded-3xl border-2 border-b-[6px] py-4 sm:py-6 font-bold transition active:translate-y-1 active:border-b-2 ';
+const OPTC = ['border-pink-200 bg-white hover:bg-pink-50', 'border-sky-200 bg-white hover:bg-sky-50', 'border-amber-200 bg-white hover:bg-amber-50', 'border-emerald-200 bg-white hover:bg-emerald-50'];
+function game() {
+  G.locked = false;
+  const q = G.qs[G.i], hr = q.dir === 'hr', two = q.h.length > 1;
+  app.innerHTML = `<div class="mx-auto max-w-xl animate-fadein">
+  <div class="mb-4 flex items-center gap-3 pt-2">
+    <button onclick="quit()" class="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-white bg-white/80 font-bold text-rose-300">✕</button>
+    <div class="h-4 flex-1 overflow-hidden rounded-full border-2 border-white bg-white/70"><div class="h-full rounded-full bg-gradient-to-r from-pink-300 via-amber-200 to-emerald-300 transition-all duration-500" style="width:${G.i * 10}%"></div></div>
+    <span class="font-bold text-slate-400">${G.i + 1}/10</span>
+    <span id="combo" class="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-500">🔥 ${G.combo}</span>
+  </div>
+  <div class="rounded-[2rem] border-4 border-white bg-white/70 p-5 text-center shadow-xl backdrop-blur sm:p-8">
+    <div id="mascot" class="text-5xl sm:text-6xl">${MASCOTS[tier()]}</div>
+    <p class="mt-1 font-semibold text-pink-400">${hr ? 'Apa bacaan huruf ini?' : 'Mana hiragana yang tepat?'}</p>
+    <div class="my-4 animate-pop sm:my-6 ${hr ? 'font-jp font-black leading-none text-rose-400 ' + (two ? 'text-[5.5rem] sm:text-[8rem]' : 'text-[7rem] sm:text-[10rem]') : 'text-7xl font-bold text-sky-400 sm:text-8xl'}">${hr ? q.h : q.r}</div>
+    <div class="grid grid-cols-2 gap-3 sm:gap-4">${q.opts.map((o, j) => `<button onclick="pick(${j})" class="opt ${OPT}${OPTC[j]} ${hr ? 'text-3xl' : 'font-jp text-5xl'}"><span class="absolute left-3 top-1.5 hidden text-[11px] font-semibold text-slate-300 sm:block">${j + 1}</span>${hr ? o.r : o.h}</button>`).join('')}</div>
+    <div id="fb" class="mt-5 min-h-[3.5rem]"></div>
+  </div></div>`;
+}
+function pick(j) {
+  if (!G || !G.live || G.locked) return;
+  G.locked = true;
+  const q = G.qs[G.i], hr = q.dir === 'hr', ok = q.opts[j].h === q.h;
+  const st = S.chars[q.h] || (S.chars[q.h] = { c: 0, w: 0, s: 0 });
+  const btns = [...document.querySelectorAll('.opt')], mas = $('#mascot'), fb = $('#fb');
+  const paint = (b, k) => b.className = `${OPT} pointer-events-none ${hr ? 'text-3xl' : 'font-jp text-5xl'} ${k}`;
+  btns.forEach((b, i) => paint(b, i === j && !ok ? 'animate-shake border-rose-300 bg-rose-100 text-rose-500' : q.opts[i].h === q.h ? 'animate-bounce2 border-emerald-300 bg-emerald-100 text-emerald-600' : 'border-slate-100 bg-white/60 opacity-50'));
+  S.ta++;
+  if (ok) {
+    S.tc++; st.c++; st.s++; G.score++; G.combo++; G.best = Math.max(G.best, G.combo);
+    const gain = 10 + Math.min(G.combo - 1, 5) * 2; G.xp += gain;
+    mas.textContent = G.combo >= 3 ? '🤩' : '😸'; mas.classList.add('animate-bounce2'); sfx.ok();
+    $('#combo').textContent = '🔥 ' + G.combo;
+    fb.innerHTML = `<div class="animate-pop rounded-2xl bg-emerald-100/80 px-4 py-3 font-bold text-emerald-600">✨ ${G.combo >= 3 ? 'Combo x' + G.combo + '!' : 'Benar!'} +${gain} XP</div>`;
+    if (G.combo === 5) confetti(25);
+    say(q.h); timer = setTimeout(next, 1300);
+  } else {
+    st.w++; st.s = 0; G.combo = 0;
+    mas.textContent = '🙀'; mas.classList.add('animate-shake'); sfx.no();
+    $('#combo').textContent = '🔥 0';
+    fb.innerHTML = `<div class="flex animate-pop items-center justify-between gap-3 rounded-2xl bg-rose-100/80 px-4 py-2 text-left"><p class="font-bold text-rose-500">Jawabannya <span class="font-jp text-xl">${q.h}</span> = ${q.r}</p><button onclick="next()" class="shrink-0 ${BTN.p} !px-4 !py-2">Lanjut</button></div>`;
+    say(q.h);
+  }
+  save();
+}
+function next() {
+  if (!G || !G.live || !G.locked) return;
+  clearTimeout(timer); G.i++;
+  G.i >= 10 ? finish() : game();
+}
+function quit() {
+  modal({ emoji: '🥹', title: 'Keluar dulu?', body: 'Ronde ini belum selesai dan tidak akan dihitung.', btns: [{ l: 'Lanjut main', t: 's' }, { l: 'Keluar', f: () => { clearTimeout(timer); home() } }] });
+}
+function finish() {
+  const id = G.id, sc = G.score, stars = sc >= 9 ? 3 : sc >= 7 ? 2 : sc >= 4 ? 1 : 0;
+  const gained = G.xp + stars * 10 + (sc === 10 ? 20 : 0), before = lvl();
+  S.xp += gained;
+  const c = S.cats[id] || (S.cats[id] = { best: 0, plays: 0, top: 0 });
+  c.plays++; c.best = Math.max(c.best, stars); c.top = Math.max(c.top, sc);
+  const today = new Date().toLocaleDateString('en-CA'), yest = new Date(Date.now() - 864e5).toLocaleDateString('en-CA');
+  if (S.last !== today) { S.sd = S.last === yest ? S.sd + 1 : 1; S.last = today }
+  save(); G.live = false;
+  const up = lvl() > before;
+  const msg = ['Ayo coba lagi, pasti bisa! 💪', 'Lumayan! Terus semangat 🌱', 'Bagus sekali! Hampir sempurna ✨', 'Sugoi! すごい! Sempurna! 🎉'][stars];
+  home(); stars >= 2 ? (sfx.win(), confetti(stars === 3 ? 70 : 40)) : sfx.no();
+  modal({
+    emoji: ['🥺', '😺', '😸', '🤩'][stars], title: msg,
+    body: `<div class="my-2 flex justify-center gap-2 text-5xl">${[0, 1, 2].map(i => `<span class="animate-pop ${i < stars ? '' : 'opacity-30 grayscale'}" style="animation-delay:${i * .25}s">⭐</span>`).join('')}</div>
+      <div class="mt-3 grid grid-cols-3 gap-2 text-center">${chip(sc + '/10', 'benar')}${chip('+' + gained, 'XP')}${chip('x' + G.best, 'combo')}</div>
+      ${up ? `<div class="mt-3 animate-pop rounded-2xl bg-amber-100 px-3 py-2 font-bold text-amber-600">🎊 Naik ke Lv.${lvl()} · ${TITLES[tier()]}!</div>` : ''}`,
+    btns: [{ l: 'Menu', t: 's' }, { l: 'Main lagi 🔁', f: () => start(id) }]
+  });
+  if (up) setTimeout(() => confetti(50), 400);
+}
+
+/* keyboard: 1-4 jawab, Enter/Spasi lanjut */
+document.addEventListener('keydown', e => {
+  if (!G || !G.live || document.querySelector('[data-modal]')) return;
+  if (/^[1-4]$/.test(e.key)) pick(+e.key - 1);
+  else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); next() }
+});
+home();
+</script>
+</body>
+</html>
